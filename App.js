@@ -1,15 +1,17 @@
 import React from 'react';
-import { StyleShet, Text, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
+import ProfileScreen from './src/screens/ProfileScreen';
+
 
 export default function App() { 
-    return ( 
-        <View style = { styles.container}>
-            <Text style= {styles.title} > TASKFLOW </Text>
-            <Text style= {styles.subtitle} > Estructura Base </Text>
-            <Text style= {styles.status} > Estructura de la base completa </Text>
+    return <ProfileScreen />
+    //     <View style = { styles.container}>
+    //         <Text style= {styles.title} > TASKFLOW </Text>
+    //         <Text style= {styles.subtitle} > Estructura Base </Text>
+    //         <Text style= {styles.status} > Estructura de la base completa </Text>
 
-        </View>
-    );
+    //     </View>
+    // );
 }
 
 const styles = StyleSheet.create({
