@@ -1,4 +1,4 @@
-import { View, Text, TextInput, StyleSheet, Pressable, Alert, SafeAreaView  } from 'react-native'
+import { View, Text, TextInput, StyleSheet, Pressable, Alert, SafeAreaView, KeyboardAvoidingView, Platform, ScrollView  } from 'react-native'
 import Header from '../components/Header'
 import ProfileCard from '../components/ProfileCard'
 import { name } from '../data'
@@ -22,12 +22,12 @@ const HomeScreen = () => {
   const [titleFocused, setTitleFocused] = useState(false)
   const [descriptionFocused, setDescriptionFocused] = useState(false)
 
-  const isButtonDisabled = title.trim().length < 3 
+  const isButtonDisabled = title.trim().length < 5 || description.trim().length < 10 
 
   const handleAddTask = () => {
     let valid = true
 
-    setTitleError(' ')
+    setTitleError('')
     setDescriptionError('')
 
     if(title.trim().length < 5) {
@@ -57,7 +57,7 @@ const HomeScreen = () => {
     
     setTaskList((prev) => [newTask, ...prev])
 
-    Alert.alert('Exito, tarea capturada correctamente')
+    Alert.alert('Exito', 'tarea capturada correctamente')
 
     setTitle('')
     setDescription('')
@@ -68,7 +68,15 @@ const HomeScreen = () => {
 
   return (
     <SafeAreaView style= {styles.container}> 
-    
+     <KeyboardAvoidingView
+        style={{ flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 60 : 0}
+     >
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
      {/* 
       <View style={styles.gretting}>
         <Text style={styles.grettingText}>Hola buenas noches { name.slice(0, 9)}</Text>
@@ -102,8 +110,8 @@ const HomeScreen = () => {
           placeholder="Descripcion"
           multiline
           autoCapitalize="sentences"
-          onFocus={() => setTitleFocused(true)}
-          onBlur= {() => setTitleFocused(false)}
+          onFocus={() => setDescriptionFocused(true)}
+          onBlur= {() => setDescriptionFocused(false)}
           style= {[
             styles.input,
             descriptionFocused && styles.inputFocused,
@@ -155,24 +163,9 @@ const HomeScreen = () => {
           <Text style={ styles.buttonText}> Agregar Tarea</Text>
         </Pressable>
         
-      </View>
-      
-      
-
-
-      
-      {/* <View style={{ width: '100%', alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: textSize.subtitle, fontWeight: 'bold' }}>
-          Tareas completadas {tasks.filter((task) => task.done).length} / {tasks.length}
-        </Text>
-      </View>
-      <View style={{ width: '100%', gap: 16 }}>
-        {tasks.map((task) => {
-          return <CardTask key={task.id} task={task} />
-        })}
-      </View> */}
-
-    
+      </View>      
+     </ScrollView>
+     </KeyboardAvoidingView>
     </SafeAreaView>
   
   )
@@ -181,8 +174,12 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    gap: 20,
     backgroundColor: colors.backgroundColor,
+  },
+
+  scrollContent: {
+    gap: 20,
+    paddingBottom: 30,
   },
 
   greeting: {

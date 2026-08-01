@@ -29,15 +29,29 @@ taskflow-app
 
 ## PRE- ENTREGA 2
 segunda fase de desarrollo retomando el repositorio del modulo 1 con algunas correcciones
-#Que construimos en esta pre entrega?
+# Que construimos en esta pre entrega?
     1. Arquitectura de archivos
     2. Pantallas Base del proyecto (HomeScreen, ProfileScreen)
     3. Componente ProfileCard
     4. Sistema de estilos
 
-## Que se logro?
+# Que se logro?
     1. Arquitectura Modular: creacion de carpetas como /components, /screens, assets, constants
     2. Sistema de disenio: Implementacion de un archivo theme.js para guardar y manejar los colores de la app
     3. Crear componente reutilizable: se creo ProfileCard.js utilizando props (solicitado en la consigna 'name', 'role', 'image') 
     4. Crear pantallas como lo es HomeScreen.js como base y ProfileScreen.js donde renderizamos la ProfileCard.js
 
+## PRE-ENTREGA 3
+Tercera fase del desarrollo donde se realizo la creacion de un formulario de creacion de tareas con su Logica de fondo
+# Que construimos en esta pre entrega?
+ 1. Creacion de un formulario Visual y funcional
+ 2. Inputs controlados para titulo y descripcion
+ 3. Validaciones (titulo y descripcion)
+ 4. FeedBack visual para mejor experiencia UX del usuario
+ 5. Boton "Agregar Tarea"funcional y logico con su manejo de errores
+ 6. KeyboardAvoidingView y ScrollView para que el teclado no tape el formulario en pantalla
+# Que se logro?
+    1. un formulario funcional que valida datos antes de aceptarlos
+    2. Simulacion de guardados, mostrando un Alert que esto se realizo correctamente
+    3. Limpieza automatica del formulario luego de un guardado exitoso
+    4. Base logica para conectar en los proximos checkPoints
