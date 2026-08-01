@@ -28,7 +28,7 @@ const styles = StyleSheet.create({
     boxShadow: shadows.cardShadow,
     flexDirection: 'row',
     gap: 16,
-    padding: 16,
+    padding: 20,
     alignItems: 'center'
   },
   avatarHeader: {
