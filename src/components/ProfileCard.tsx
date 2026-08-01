@@ -6,7 +6,7 @@ type ProfileCard = {
   task: Task
 }
 
-const CardTask = ({ task }: ProfileCard) => {
+const ProfileCard = ({ task }: ProfileCard) => {
   const taskSpanish: Record<Task['time'], string> = {
     today: 'Hoy',
     tomorrow: 'Mañana',
