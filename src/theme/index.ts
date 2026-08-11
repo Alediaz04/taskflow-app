@@ -1,3 +1,5 @@
 export { colors } from './colors'
-export { shadows } from './shadows'
+
+export { spacing, radius } from './spacing'
+export { shadow } from './shadow'
 export { textSize } from './texts'
