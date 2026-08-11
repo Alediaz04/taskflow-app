@@ -17,7 +17,11 @@ const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange
 
   return (
     <TouchableOpacity
-      style={[styles.card, task.completed && styles.cardCompleted]}
+      style={[
+        styles.card,
+        { borderLeftColor: cat.color },
+        task.completed && styles.cardCompleted
+      ]}
       onPress={() => onPress(task)}
       activeOpacity={0.75}
     >
@@ -65,6 +69,7 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     backgroundColor: colors.surface,
     borderRadius: radius.md,
+    borderLeftWidth: 4,
     padding: spacing.lg,
     marginBottom: spacing.sm,
     boxShadow: shadow.card

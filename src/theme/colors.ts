@@ -12,7 +12,7 @@ export const colors = {
     primarySoft: '#FFE9E1',
     dark: '#2A1008',
     success: '#2FA36B',
-    successSoft: '#E3F4EB',
+    successSoft: '#8edbb2ff',
     danger: '#D64545',
     dangerSoft: '#FBE9E9',
 

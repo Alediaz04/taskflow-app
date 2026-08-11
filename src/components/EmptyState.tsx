@@ -2,15 +2,20 @@ import React from 'react'
 import { StyleSheet, Text, View } from 'react-native'
 import { colors, spacing } from '../theme'
 
-export default function EmptyState() {
+type EmptyStateProps = {
+  title?: string
+  subtitle?: string
+}
+
+export default function EmptyState({
+  title = '¡No tienes tareas pendientes!',
+  subtitle = 'Empieza por crear una con el botón de abajo.'
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
-     <Text style={styles.emoji}>🗒️</Text>
-
-      <Text style={styles.title}>¡No tienes tareas pendientes!</Text>
-
-      
-      <Text style={styles.subtitle}>Empieza por crear una con el botón de abajo.</Text>
+      <Text style={styles.emoji}>🗒️</Text>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.subtitle}>{subtitle}</Text>
     </View>
   )
 }

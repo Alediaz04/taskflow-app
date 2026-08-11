@@ -63,18 +63,17 @@ export default function App() {
                 <Text style={styles.subtitle}> Lista, formulario y detalle </Text>
               </View>
             {selectedTask ? (
-              <View style={styles.screen}>
+              <View style={styles.flex}>
                 <TaskDetailScreen
                   task={selectedTask}
                   onBack={closeDetail}
                   onToggle={toggleTask}
                   onDelete={deleteTask}
                 />
-
               </View>
             ) : (
               /** VISTA COMPLETA */
-              <View style={styles.screen}>
+              <View style={styles.flex}>
                 <FlatListScreen tasks={tasks} onToggle={toggleTask} onSelect={openDetail} />
                 <TaskForm onAdd={addTask} />
               </View>
