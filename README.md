@@ -55,3 +55,21 @@ Tercera fase del desarrollo donde se realizo la creacion de un formulario de cre
     2. Simulacion de guardados, mostrando un Alert que esto se realizo correctamente
     3. Limpieza automatica del formulario luego de un guardado exitoso
     4. Base logica para conectar en los proximos checkPoints
+
+
+
+## PRE-ENTREGA 4
+Cuarta fase del desarrollo ,modificamos la pantalla FlatListScreen.tsx para mejorar su experiencia visual y funcionalidad
+# Que construimos en esta pre entrega?
+ 1. Componente reutilizable FlatListScreen.tsx 
+ 2. inputs controlados para titulo y descripcion
+ 3. Validaciones (titulo y descripcion)
+ 4. FeedBack visual para mejor experiencia UX del usuario
+ 5. Boton "Agregar Tarea"funcional y logico con su manejo de errores
+ 6. KeyboardAvoidingView y ScrollView para que el teclado no tape el formulario en pantalla
+# Que se logro?
+    1. un formulario funcional que valida datos antes de aceptarlos
+    2. Simulacion de guardados, mostrando un Alert que esto se realizo correctamente
+    3. Limpieza automatica del formulario luego de un guardado exitoso
+    4. Base logica para conectar en los proximos checkPoints
+
