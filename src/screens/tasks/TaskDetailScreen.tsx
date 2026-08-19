@@ -1,21 +1,42 @@
 import React from 'react'
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { CATEGORIES, DUE_DATES, Task } from '../types'
-import { colors, radius, shadow, spacing } from '../theme'
+import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-type Props = {
-  task: Task
-  onBack: () => void
+import { CATEGORIES, DUE_DATES, Task } from '../../types'
+import { colors, radius, shadow, spacing, screenStyles } from '../../theme'
+import { RootStackParamList } from '../../navigation/types'
+
+type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'> & {
+  tasks: Task[]
   onToggle: (id: string) => void
   onDelete: (id: string) => void
 }
 
-export default function TaskDetailScreen({ task, onBack, onToggle, onDelete }: Props) {
+export default function TaskDetailScreen({ navigation, route, tasks, onToggle, onDelete }: Props) {
+  const taskId = route.params?.taskId ?? route.params?.task?.id
+  const task = tasks.find((t) => t.id === taskId) ?? route.params?.task
+
+  if (!task) {
+    return (
+      <View style={screenStyles.container}>
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} hitSlop={8}>
+          <Text style={styles.backText}>‹ Volver a la lista</Text>
+        </TouchableOpacity>
+        <Text style={styles.title}>Tarea no encontrada</Text>
+      </View>
+    )
+  }
+
   const cat = CATEGORIES[task.category]
 
+  const handleDelete = () => {
+    onDelete(task.id)
+    navigation.goBack()
+  }
+
   return (
-    <View style={styles.container}>
-      <TouchableOpacity style={styles.backButton} onPress={onBack} hitSlop={8}>
+    <View style={screenStyles.container}>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} hitSlop={8}>
         <Text style={styles.backText}>‹ Volver a la lista</Text>
       </TouchableOpacity>
 
@@ -73,7 +94,7 @@ export default function TaskDetailScreen({ task, onBack, onToggle, onDelete }: P
 
         <TouchableOpacity
           style={[styles.action, styles.actionDelete]}
-          onPress={() => onDelete(task.id)}
+          onPress={handleDelete}
           activeOpacity={0.85}
         >
           <Text style={[styles.actionText, { color: colors.danger }]}>Eliminar tarea</Text>
@@ -84,10 +105,6 @@ export default function TaskDetailScreen({ task, onBack, onToggle, onDelete }: P
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: spacing.lg
-  },
   backButton: {
     alignSelf: 'flex-start'
   },

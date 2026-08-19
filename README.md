@@ -1,75 +1,108 @@
-# TASKFLOW
+# TaskFlow 🚀
 
-Aplicacion movil desarrollada con React Native y Expo para gestionar tareas, habitos y metas personales
+Aplicación móvil desarrollada con **React Navigation**, **React Native** y **Expo** para gestionar tareas, hábitos y metas personales.
 
-## instrucciones para abrir el proyecto localmente
+---
 
-    clonar el repositorio de github git clone cd taskflow-app
+## 🛠️ Instalación y Ejecución Local
 
-    instalar dependencias del proyecto npm install
+1. **Clonar el repositorio**:
+   ```bash
+   git clone <URL_DEL_REPOSITORIO>
+   cd taskflow-app
+   ```
 
-    iniciar el servidor npx expo start -c
+2. **Instalar dependencias**:
+   ```bash
+   npm install
+   ```
 
-    Escanear el codigo QR en la app de expo GO
+3. **Iniciar el servidor de desarrollo**:
+   ```bash
+   npx expo start -c
+   ```
 
-## ESTRUCTURA INICIAL DEL PROYECTO
+4. **Escanear el código QR** desde la app de Expo Go en tu dispositivo móvil (o presionar `a` para emulador Android / `i` para iOS).
 
-taskflow-app 
--- src/ 
-   -- assets/ # recursos como imagenes o fuentes 
-   -- components/ # componentes reutilizables de la UI 
-   -- screens/ # pantallas principales de la aplicacion 
-   -- theme/ # paleta de colores y estilos globales 
--- .gitignore # archivos y historial ignorados para git
--- App.js # Entrada de la app 
--- app.json # configuracion global y metadatos de Expo 
--- package.json # dependencias del proyecto
--- README.md #documentacion del proyecto
+---
 
+## 📱 Arquitectura de Navegación (Checkpoint 5)
 
-## PRE- ENTREGA 2
-segunda fase de desarrollo retomando el repositorio del modulo 1 con algunas correcciones
-# Que construimos en esta pre entrega?
-    1. Arquitectura de archivos
-    2. Pantallas Base del proyecto (HomeScreen, ProfileScreen)
-    3. Componente ProfileCard
-    4. Sistema de estilos
+TaskFlow implementa una **arquitectura de navegación anidada profesional** usando React Navigation (`@react-navigation/bottom-tabs` + `@react-navigation/native-stack`).
 
-# Que se logro?
-    1. Arquitectura Modular: creacion de carpetas como /components, /screens, assets, constants
-    2. Sistema de disenio: Implementacion de un archivo theme.js para guardar y manejar los colores de la app
-    3. Crear componente reutilizable: se creo ProfileCard.js utilizando props (solicitado en la consigna 'name', 'role', 'image') 
-    4. Crear pantallas como lo es HomeScreen.js como base y ProfileScreen.js donde renderizamos la ProfileCard.js
+```text
+NavigationContainer (Root)
+└── BottomTabNavigator (Navegador de Pestañas)
+    ├── Tab "Tareas" -> TaskStack (Native Stack Navigator)
+    │   ├── TaskList   (src/screens/tasks/TasksScreen.tsx)
+    │   ├── TaskDetail (src/screens/tasks/TaskDetailScreen.tsx)
+    │   └── TaskForm   (src/screens/tasks/TaskFormScreen.tsx)
+    └── Tab "Perfil" -> ProfileStack (Native Stack Navigator)
+        └── Profile    (src/screens/profile/ProfileScreen.tsx)
+```
 
-## PRE-ENTREGA 3
-Tercera fase del desarrollo donde se realizo la creacion de un formulario de creacion de tareas con su Logica de fondo
-# Que construimos en esta pre entrega?
- 1. Creacion de un formulario Visual y funcional
- 2. Inputs controlados para titulo y descripcion
- 3. Validaciones (titulo y descripcion)
- 4. FeedBack visual para mejor experiencia UX del usuario
- 5. Boton "Agregar Tarea"funcional y logico con su manejo de errores
- 6. KeyboardAvoidingView y ScrollView para que el teclado no tape el formulario en pantalla
-# Que se logro?
-    1. un formulario funcional que valida datos antes de aceptarlos
-    2. Simulacion de guardados, mostrando un Alert que esto se realizo correctamente
-    3. Limpieza automatica del formulario luego de un guardado exitoso
-    4. Base logica para conectar en los proximos checkPoints
+---
 
+## 📋 Criterios de Aceptación Cumplidos
 
+1. **Arquitectura Anidada (`TabNavigator`)**:
+   - `Tab.Navigator` como ruta principal con dos pestañas: **Tareas** (Home) y **Perfil**.
+   - Iconos representativos mediante `@expo/vector-icons` (`Ionicons`).
 
-## PRE-ENTREGA 4
-Cuarta fase del desarrollo ,modificamos la pantalla FlatListScreen.tsx para mejorar su experiencia visual y funcionalidad
-# Que construimos en esta pre entrega?
- 1. Componente reutilizable FlatListScreen.tsx 
- 2. inputs controlados para titulo y descripcion
- 3. Validaciones (titulo y descripcion)
- 4. FeedBack visual para mejor experiencia UX del usuario
- 5. Boton "Agregar Tarea"funcional y logico con su manejo de errores
- 6. KeyboardAvoidingView y ScrollView para que el teclado no tape el formulario en pantalla
-# Que se logro?
-    1. un formulario funcional que valida datos antes de aceptarlos
-    2. Simulacion de guardados, mostrando un Alert que esto se realizo correctamente
-    3. Limpieza automatica del formulario luego de un guardado exitoso
-    4. Base logica para conectar en los proximos checkPoints
+2. **Stack Navigator de Tareas (`TaskStack`)**:
+   - **`TaskList`**: Pantalla principal con la lista de tareas (`FlatList`), contadores de progreso y filtros.
+   - **`TaskDetail`**: Pantalla de detalle de tarea apilada sobre la lista.
+   - **`TaskForm`**: Pantalla dedicada para la creación de nuevas tareas dentro del stack.
 
+3. **Paso de Parámetros (`route.params`)**:
+   - Al presionar una tarea en `TaskList`, se ejecuta:
+     ```typescript
+     navigation.navigate('TaskDetail', { taskId: item.id, task: item })
+     ```
+   - En `TaskDetailScreen`, los parámetros son leídos a través de `route.params.taskId` y renderizados dinámicamente.
+
+4. **Navegación Programática tras Guardar**:
+   - Al completar los campos en `TaskFormScreen` y accionar el botón **"Guardar Tarea"**, se procesa la adición y se realiza la redirección programática automática:
+     ```typescript
+     navigation.navigate('TaskList')
+     ```
+
+5. **Consistencia Visual**:
+   - Headers nativos configurados con títulos coherentes en cada pantalla (*"Mis tareas"*, *"Detalles de la tarea"*, *"Nueva Tarea"*, *"Mi perfil"*).
+
+---
+
+## 📂 Estructura del Proyecto
+
+```text
+taskflow-app/
+├── assets/                  # Recursos gráficos e imágenes
+├── src/
+│   ├── components/          # Componentes de UI reutilizables (TaskItem, EmptyState, MountBadge, etc.)
+│   ├── data/                # Datos semilla (SEED_TASKS)
+│   ├── navigation/          # Configuración de React Navigation
+│   │   ├── TabNavigator.tsx # Navegador principal por pestañas (Bottom Tabs)
+│   │   ├── TaskStack.tsx    # Stack para la sección de tareas (List -> Detail -> Form)
+│   │   ├── ProfileStack.tsx # Stack para la sección de perfil
+│   │   └── types.ts         # Definiciones de TypeScript para RootStackParamList
+│   ├── screens/             # Pantallas organizadas por dominio
+│   │   ├── profile/
+│   │   │   └── ProfileScreen.tsx
+│   │   └── tasks/
+│   │       ├── TasksScreen.tsx
+│   │       ├── TaskDetailScreen.tsx
+│   │       └── TaskFormScreen.tsx
+│   ├── theme/               # Paleta de colores, sombras, bordes y layout global
+│   └── types/               # Tipos del dominio (Task, Category, DueDate)
+├── App.tsx                  # Punto de entrada wrapping SafeAreaProvider
+├── package.json
+└── README.md
+```
+
+---
+
+## 🔮 Próximos Módulos
+
+- **Módulo 6 (Redux Toolkit)**: Centralización del estado de tareas en un *store* global de Redux.
+- **Módulo 7 (Firebase)**: Autenticación de usuarios y persistencia de datos en Firestore / Realtime Database.
+- **Módulo 8 (Final)**: Transiciones avanzadas, integración de cámara para foto de perfil y preparación para producción.

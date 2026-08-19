@@ -1,0 +1,23 @@
+import { createNativeStackNavigator } from '@react-navigation/native-stack'
+import ProfileScreen from '../screens/profile/ProfileScreen'
+
+const Stack = createNativeStackNavigator()
+
+const ProfileStack = () => {
+  return (
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: true,
+      }}>
+      <Stack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{
+          title: 'Mi perfil',
+        }}
+      />
+    </Stack.Navigator>
+  )
+}
+
+export default ProfileStack
