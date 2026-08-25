@@ -11,18 +11,22 @@ import {
 } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { CATEGORIES, Category, createId, DueDate, DUE_DATES, Task } from '../../types'
-import { colors, radius, shadow, spacing, screenStyles } from '../../theme'
+import { CATEGORIES, Category, DueDate, DUE_DATES } from '../../types'
+import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { RootStackParamList } from '../../navigation/types'
+import { useAppDispatch } from '../../store/hooks'
+import { addTask } from '../../features/tasks/tasksSlice'
 
-type Props = NativeStackScreenProps<RootStackParamList, 'TaskForm'> & {
-  onAdd: (task: Task) => void
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'TaskForm'>
 
 const CATEGORY_KEYS = Object.keys(CATEGORIES) as Category[]
 const DATE_KEYS = Object.keys(DUE_DATES) as DueDate[]
 
-export default function TaskFormScreen({ navigation, onAdd }: Props) {
+export default function TaskFormScreen({ navigation }: Props) {
+  const { colors } = useAppTheme()
+  const styles = getStyles(colors)
+
+  const dispatch = useAppDispatch()
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [category, setCategory] = useState<Category>('personal')
@@ -33,24 +37,21 @@ export default function TaskFormScreen({ navigation, onAdd }: Props) {
   const handleSubmit = () => {
     if (!canSubmit) return
 
-    const newTask: Task = {
-      id: createId(),
-      title: title.trim(),
-      description: description.trim(),
-      category,
-      date,
-      completed: false
-    }
+    dispatch(
+      addTask({
+        title: title.trim(),
+        description: description.trim(),
+        category,
+        date
+      })
+    )
 
-    onAdd(newTask)
-
-    // Redirección programática tras guardar (consigna de navegación)
     navigation.navigate('TaskList')
   }
 
   return (
     <KeyboardAvoidingView
-      style={screenStyles.container}
+      style={[screenStyles.container, { backgroundColor: colors.canvas }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView
@@ -109,7 +110,7 @@ export default function TaskFormScreen({ navigation, onAdd }: Props) {
                   <Text
                     style={[
                       styles.chipText,
-                      { color: active ? colors.surface : cat.color }
+                      { color: active ? '#FFFFFF' : cat.color }
                     ]}
                   >
                     {cat.emoji} {cat.label}
@@ -162,92 +163,93 @@ export default function TaskFormScreen({ navigation, onAdd }: Props) {
   )
 }
 
-const styles = StyleSheet.create({
-  scrollContent: {
-    paddingBottom: spacing.xxl,
-    gap: spacing.md
-  },
-  heading: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: colors.ink
-  },
-  subheading: {
-    fontSize: 14,
-    color: colors.muted,
-    marginTop: -spacing.xs
-  },
-  fieldGroup: {
-    gap: spacing.xs
-  },
-  label: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
-  },
-  input: {
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm + 4,
-    fontSize: 15,
-    color: colors.ink,
-    boxShadow: shadow.card
-  },
-  textarea: {
-    minHeight: 90,
-    textAlignVertical: 'top'
-  },
-  chipRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.sm
-  },
-  chip: {
-    borderWidth: 1.5,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2
-  },
-  chipNeutral: {
-    borderColor: colors.border,
-    backgroundColor: colors.surface
-  },
-  chipNeutralActive: {
-    backgroundColor: colors.dark,
-    borderColor: colors.dark
-  },
-  chipText: {
-    fontSize: 13,
-    fontWeight: '700'
-  },
-  submit: {
-    backgroundColor: colors.primary,
-    borderRadius: radius.md,
-    paddingVertical: spacing.md + 2,
-    alignItems: 'center',
-    marginTop: spacing.sm,
-    boxShadow: shadow.raised
-  },
-  submitDisabled: {
-    opacity: 0.45
-  },
-  submitText: {
-    color: colors.surface,
-    fontSize: 16,
-    fontWeight: '800'
-  },
-  cancelButton: {
-    alignItems: 'center',
-    paddingVertical: spacing.sm
-  },
-  cancelText: {
-    color: colors.muted,
-    fontSize: 14,
-    fontWeight: '600'
-  }
-})
+const getStyles = (colors: AppColors) =>
+  StyleSheet.create({
+    scrollContent: {
+      paddingBottom: spacing.xxl,
+      gap: spacing.md
+    },
+    heading: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.ink
+    },
+    subheading: {
+      fontSize: 14,
+      color: colors.muted,
+      marginTop: -spacing.xs
+    },
+    fieldGroup: {
+      gap: spacing.xs
+    },
+    label: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5
+    },
+    input: {
+      backgroundColor: colors.surface,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: radius.md,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 4,
+      fontSize: 15,
+      color: colors.ink,
+      boxShadow: shadow.card
+    },
+    textarea: {
+      minHeight: 90,
+      textAlignVertical: 'top'
+    },
+    chipRow: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.sm
+    },
+    chip: {
+      borderWidth: 1.5,
+      borderRadius: radius.pill,
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs + 2
+    },
+    chipNeutral: {
+      borderColor: colors.border,
+      backgroundColor: colors.surface
+    },
+    chipNeutralActive: {
+      backgroundColor: colors.primary,
+      borderColor: colors.primary
+    },
+    chipText: {
+      fontSize: 13,
+      fontWeight: '700'
+    },
+    submit: {
+      backgroundColor: colors.primary,
+      borderRadius: radius.md,
+      paddingVertical: spacing.md + 2,
+      alignItems: 'center',
+      marginTop: spacing.sm,
+      boxShadow: shadow.raised
+    },
+    submitDisabled: {
+      opacity: 0.45
+    },
+    submitText: {
+      color: colors.surface,
+      fontSize: 16,
+      fontWeight: '800'
+    },
+    cancelButton: {
+      alignItems: 'center',
+      paddingVertical: spacing.sm
+    },
+    cancelText: {
+      color: colors.muted,
+      fontSize: 14,
+      fontWeight: '600'
+    }
+  })

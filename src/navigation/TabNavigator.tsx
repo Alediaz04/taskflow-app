@@ -4,13 +4,15 @@ import { Ionicons } from '@expo/vector-icons'
 
 import ProfileStack from './ProfileStack'
 import TaskStack from './TaskStack'
-import { colors } from '../theme/colors'
+import { useAppTheme } from '../theme'
 
 const Tab = createBottomTabNavigator()
 
 const TabNavigator = () => {
+  const { navTheme, colors } = useAppTheme()
+
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navTheme}>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,

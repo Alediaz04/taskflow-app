@@ -1,7 +1,7 @@
 import React, { memo, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { CATEGORIES, DUE_DATES, Task } from '../types'
-import { colors, radius, shadow, spacing } from '../theme'
+import { radius, shadow, spacing, useAppTheme } from '../theme'
 
 type Props = {
   task: Task
@@ -12,6 +12,7 @@ type Props = {
 
 const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange }: Props) {
   useEffect(() => onMountChange?.(), [onMountChange])
+  const { colors } = useAppTheme()
 
   const cat = CATEGORIES[task.category]
 
@@ -19,7 +20,7 @@ const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange
     <TouchableOpacity
       style={[
         styles.card,
-        { borderLeftColor: cat.color },
+        { backgroundColor: colors.surface, borderLeftColor: cat.color },
         task.completed && styles.cardCompleted
       ]}
       onPress={() => onPress(task)}
@@ -34,12 +35,12 @@ const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange
         onPress={() => onToggle(task.id)}
         hitSlop={8}
       >
-        {task.completed && <Text style={styles.checkmark}>✓</Text>}
+        {task.completed && <Text style={{ color: colors.surface, fontSize: 13, fontWeight: '800', lineHeight: 15 }}>✓</Text>}
       </TouchableOpacity>
 
       <View style={styles.body}>
         <Text
-          style={[styles.title, task.completed && styles.titleCompleted]}
+          style={[styles.title, { color: colors.ink }, task.completed && { color: colors.muted, textDecorationLine: 'line-through' }]}
           numberOfLines={1}
         >
           {task.title}
@@ -51,11 +52,11 @@ const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange
               {cat.emoji} {cat.label}
             </Text>
           </View>
-          <Text style={styles.date}>{DUE_DATES[task.date]}</Text>
+          <Text style={[styles.date, { color: colors.muted }]}>{DUE_DATES[task.date]}</Text>
         </View>
       </View>
 
-      <Text style={styles.chevron}>›</Text>
+      <Text style={[styles.chevron, { color: colors.muted }]}>›</Text>
     </TouchableOpacity>
   )
 })
@@ -67,7 +68,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: radius.md,
     borderLeftWidth: 4,
     padding: spacing.lg,
@@ -85,24 +85,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center'
   },
-  checkmark: {
-    color: colors.surface,
-    fontSize: 13,
-    fontWeight: '800',
-    lineHeight: 15
-  },
   body: {
     flex: 1,
     gap: spacing.xs
   },
   title: {
     fontSize: 15,
-    fontWeight: '700',
-    color: colors.ink
-  },
-  titleCompleted: {
-    textDecorationLine: 'line-through',
-    color: colors.muted
+    fontWeight: '700'
   },
   metaRow: {
     flexDirection: 'row',
@@ -119,12 +108,10 @@ const styles = StyleSheet.create({
     fontWeight: '700'
   },
   date: {
-    fontSize: 12,
-    color: colors.muted
+    fontSize: 12
   },
   chevron: {
     fontSize: 22,
-    color: colors.muted,
     marginTop: -2
   }
 })

@@ -1,7 +1,6 @@
-export { colors } from './colors'
-
+export { colors, lightColors, darkColors, type AppColors } from './colors'
 export { spacing, radius } from './spacing'
 export { shadow, shadows } from './shadow'
 export { textSize } from './texts'
-
 export { screenStyles } from './layout'
+export { useAppTheme } from './useAppTheme'

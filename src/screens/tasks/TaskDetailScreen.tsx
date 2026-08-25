@@ -2,23 +2,25 @@ import React from 'react'
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { CATEGORIES, DUE_DATES, Task } from '../../types'
-import { colors, radius, shadow, spacing, screenStyles } from '../../theme'
+import { CATEGORIES, DUE_DATES } from '../../types'
+import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { RootStackParamList } from '../../navigation/types'
+import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { deleteTask, selectTaskById, toggleTaskStatus } from '../../features/tasks/tasksSlice'
 
-type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'> & {
-  tasks: Task[]
-  onToggle: (id: string) => void
-  onDelete: (id: string) => void
-}
+type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'>
 
-export default function TaskDetailScreen({ navigation, route, tasks, onToggle, onDelete }: Props) {
-  const taskId = route.params?.taskId ?? route.params?.task?.id
-  const task = tasks.find((t) => t.id === taskId) ?? route.params?.task
+export default function TaskDetailScreen({ navigation, route }: Props) {
+  const { colors } = useAppTheme()
+  const styles = getStyles(colors)
+
+  const dispatch = useAppDispatch()
+  const { taskId } = route.params
+  const task = useAppSelector(selectTaskById(taskId))
 
   if (!task) {
     return (
-      <View style={screenStyles.container}>
+      <View style={[screenStyles.container, { backgroundColor: colors.canvas }]}>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} hitSlop={8}>
           <Text style={styles.backText}>‹ Volver a la lista</Text>
         </TouchableOpacity>
@@ -30,12 +32,12 @@ export default function TaskDetailScreen({ navigation, route, tasks, onToggle, o
   const cat = CATEGORIES[task.category]
 
   const handleDelete = () => {
-    onDelete(task.id)
+    dispatch(deleteTask(task.id))
     navigation.goBack()
   }
 
   return (
-    <View style={screenStyles.container}>
+    <View style={[screenStyles.container, { backgroundColor: colors.canvas }]}>
       <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()} hitSlop={8}>
         <Text style={styles.backText}>‹ Volver a la lista</Text>
       </TouchableOpacity>
@@ -84,7 +86,7 @@ export default function TaskDetailScreen({ navigation, route, tasks, onToggle, o
 
         <TouchableOpacity
           style={[styles.action, task.completed ? styles.actionUndo : styles.actionDone]}
-          onPress={() => onToggle(task.id)}
+          onPress={() => dispatch(toggleTaskStatus(task.id))}
           activeOpacity={0.85}
         >
           <Text style={styles.actionText}>
@@ -104,113 +106,114 @@ export default function TaskDetailScreen({ navigation, route, tasks, onToggle, o
   )
 }
 
-const styles = StyleSheet.create({
-  backButton: {
-    alignSelf: 'flex-start'
-  },
-  backText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.primary
-  },
-  content: {
-    gap: spacing.md,
-    paddingBottom: spacing.xxl
-  },
-  hero: {
-    borderRadius: radius.lg,
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.sm
-  },
-  heroEmoji: {
-    fontSize: 44
-  },
-  categoryBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: radius.pill
-  },
-  categoryText: {
-    color: colors.surface,
-    fontSize: 12,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: '800',
-    color: colors.ink,
-    marginTop: spacing.xs
-  },
-  titleCompleted: {
-    textDecorationLine: 'line-through',
-    color: colors.muted
-  },
-  metaCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radius.md,
-    padding: spacing.lg,
-    boxShadow: shadow.card
-  },
-  metaRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center'
-  },
-  metaLabel: {
-    fontSize: 13,
-    color: colors.muted,
-    fontWeight: '600'
-  },
-  metaValue: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: colors.ink
-  },
-  metaId: {
-    fontSize: 12,
-    color: colors.muted,
-    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace'
-  },
-  divider: {
-    height: 1,
-    backgroundColor: colors.border,
-    marginVertical: spacing.sm + 2
-  },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: colors.muted,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginTop: spacing.sm
-  },
-  description: {
-    fontSize: 15,
-    lineHeight: 23,
-    color: colors.ink
-  },
-  action: {
-    borderRadius: radius.md,
-    paddingVertical: spacing.md + 2,
-    alignItems: 'center',
-    marginTop: spacing.sm
-  },
-  actionDone: {
-    backgroundColor: colors.success
-  },
-  actionUndo: {
-    backgroundColor: colors.dark
-  },
-  actionDelete: {
-    backgroundColor: colors.dangerSoft,
-    marginTop: 0
-  },
-  actionText: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: colors.surface
-  }
-})
+const getStyles = (colors: AppColors) =>
+  StyleSheet.create({
+    backButton: {
+      alignSelf: 'flex-start'
+    },
+    backText: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.primary
+    },
+    content: {
+      gap: spacing.md,
+      paddingBottom: spacing.xxl
+    },
+    hero: {
+      borderRadius: radius.lg,
+      alignItems: 'center',
+      paddingVertical: spacing.xl,
+      gap: spacing.sm
+    },
+    heroEmoji: {
+      fontSize: 44
+    },
+    categoryBadge: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.xs,
+      borderRadius: radius.pill
+    },
+    categoryText: {
+      color: '#FFFFFF',
+      fontSize: 12,
+      fontWeight: '800',
+      textTransform: 'uppercase',
+      letterSpacing: 0.5
+    },
+    title: {
+      fontSize: 24,
+      fontWeight: '800',
+      color: colors.ink,
+      marginTop: spacing.xs
+    },
+    titleCompleted: {
+      textDecorationLine: 'line-through',
+      color: colors.muted
+    },
+    metaCard: {
+      backgroundColor: colors.surface,
+      borderRadius: radius.md,
+      padding: spacing.lg,
+      boxShadow: shadow.card
+    },
+    metaRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center'
+    },
+    metaLabel: {
+      fontSize: 13,
+      color: colors.muted,
+      fontWeight: '600'
+    },
+    metaValue: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.ink
+    },
+    metaId: {
+      fontSize: 12,
+      color: colors.muted,
+      fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace'
+    },
+    divider: {
+      height: 1,
+      backgroundColor: colors.border,
+      marginVertical: spacing.sm + 2
+    },
+    sectionLabel: {
+      fontSize: 12,
+      fontWeight: '800',
+      color: colors.muted,
+      textTransform: 'uppercase',
+      letterSpacing: 0.5,
+      marginTop: spacing.sm
+    },
+    description: {
+      fontSize: 15,
+      lineHeight: 23,
+      color: colors.ink
+    },
+    action: {
+      borderRadius: radius.md,
+      paddingVertical: spacing.md + 2,
+      alignItems: 'center',
+      marginTop: spacing.sm
+    },
+    actionDone: {
+      backgroundColor: colors.success
+    },
+    actionUndo: {
+      backgroundColor: colors.dark
+    },
+    actionDelete: {
+      backgroundColor: colors.dangerSoft,
+      marginTop: 0
+    },
+    actionText: {
+      fontSize: 15,
+      fontWeight: '800',
+      color: colors.surface
+    }
+  })

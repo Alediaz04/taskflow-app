@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react'
 import { StyleSheet, Text, View } from 'react-native'
-import { colors, radius, spacing } from '../theme'
+import { radius, spacing, useAppTheme } from '../theme'
 
 export function useMountCounter() {
   const [mounted, setMounted] = useState(0)
@@ -10,19 +10,29 @@ export function useMountCounter() {
   }, [])
   return { mounted, onMountChange }
 }
+
 type Props = {
   mounted: number
   total: number
 }
 
 export default function MountBadge({ mounted, total }: Props) {
-  const good = mounted <= total / 2
+  const { colors } = useAppTheme()
 
-  return (<View style={[styles.badge, good ? styles.good : styles.bad]}>
-    <Text style={[styles.text, good ? styles.goodText : styles.badText]}>
-      {good ? '☁️' : '☁️'} Guardado Correctamente
-    </Text>
-  </View>
+  return (
+    <View
+      style={[
+        styles.badge,
+        {
+          backgroundColor: colors.successSoft,
+          borderColor: colors.success
+        }
+      ]}
+    >
+      <Text style={[styles.text, { color: colors.success }]}>
+        ☁️ Guardado Correctamente
+      </Text>
+    </View>
   )
 }
 
@@ -34,18 +44,8 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1
   },
-  good: {
-    backgroundColor: colors.successSoft,
-    borderColor: colors.success
-  },
-  bad: {
-    backgroundColor: colors.successSoft,
-    borderColor: colors.success,
-  },
   text: {
     fontSize: 12,
     fontWeight: '700'
-  },
-  goodText: { color: colors.success },
-  badText: { color: colors.success }
+  }
 })
