@@ -14,8 +14,9 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack'
 import { CATEGORIES, Category, DueDate, DUE_DATES } from '../../types'
 import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { RootStackParamList } from '../../navigation/types'
-import { useAppDispatch } from '../../store/hooks'
-import { addTask } from '../../features/tasks/tasksSlice'
+import { useAppSelector } from '../../store/hooks'
+import { selectCurrentUser } from '../../features/auth/authSlice'
+import { createTask } from '../../services/tasks/tasksService'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskForm'>
 
@@ -26,28 +27,31 @@ export default function TaskFormScreen({ navigation }: Props) {
   const { colors } = useAppTheme()
   const styles = getStyles(colors)
 
-  const dispatch = useAppDispatch()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [category, setCategory] = useState<Category>('personal')
-  const [date, setDate] = useState<DueDate>('today')
+  const user = useAppSelector(selectCurrentUser)
+const [title, setTitle] = useState('')
+const [description, setDescription] = useState('')
+const [category, setCategory] = useState<Category>('personal')
+const [date, setDate] = useState<DueDate>('today')
+const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const canSubmit = title.trim().length > 0 && description.trim().length > 0
+const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !isSubmitting
 
-  const handleSubmit = () => {
-    if (!canSubmit) return
+const handleSubmit = async () => {
+  if (!canSubmit || !user) return
 
-    dispatch(
-      addTask({
-        title: title.trim(),
-        description: description.trim(),
-        category,
-        date
-      })
+  setIsSubmitting(true)
+  try {
+    await createTask(
+      { title: title.trim(), description: description.trim(), category, date, completed: false },
+      user.uid
     )
-
     navigation.navigate('TaskList')
+  } catch (error) {
+    console.error('Error al crear tarea:', error)
+  } finally {
+    setIsSubmitting(false)
   }
+}
 
   return (
     <KeyboardAvoidingView
@@ -148,7 +152,7 @@ export default function TaskFormScreen({ navigation }: Props) {
           disabled={!canSubmit}
           activeOpacity={0.85}
         >
-          <Text style={styles.submitText}>Guardar Tarea ✓</Text>
+          <Text style={styles.submitText}>{isSubmitting ? 'Guardando...' : 'Guardar Tarea ✓'}</Text>
         </TouchableOpacity>
 
         <TouchableOpacity

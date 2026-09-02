@@ -9,6 +9,8 @@ import TaskItem from '../../components/TaskItem'
 import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { Task } from '../../types'
 import { RootStackParamList } from '../../navigation/types'
+
+
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
   FilterId,
@@ -16,8 +18,11 @@ import {
   selectFilter,
   selectFilteredTasks,
   setFilter,
+  setTasks,
   toggleTaskStatus
 } from '../../features/tasks/tasksSlice'
+import { selectCurrentUser } from '../../features/auth/authSlice'
+import { subscribeToTasks, updateTaskStatus } from '../../services/tasks/tasksService'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskList'>
 
@@ -44,6 +49,7 @@ const TasksScreen = ({ navigation }: Props) => {
   const styles = getStyles(colors)
 
   const dispatch = useAppDispatch()
+  const user = useAppSelector(selectCurrentUser)
   const tasks = useAppSelector(selectAllTasks)
   const filteredTasks = useAppSelector(selectFilteredTasks)
   const activeFilter = useAppSelector(selectFilter)
@@ -53,6 +59,17 @@ const TasksScreen = ({ navigation }: Props) => {
   const [showCompletionModal, setShowCompletionModal] = useState(false)
   const hasSeenCompletionRef = useRef(false)
   const prevPendingRef = useRef<number | null>(null)
+
+  // Suscripción en tiempo real a las tareas del usuario logueado.
+  useEffect(() => {
+    if (!user) return
+
+    const unsubscribe = subscribeToTasks(user.uid, (tasks) => {
+      dispatch(setTasks(tasks))
+    })
+
+    return unsubscribe
+  }, [user, dispatch])
 
   const pending = tasks.filter((t) => !t.completed).length
   const completed = tasks.length - pending
@@ -98,10 +115,17 @@ const TasksScreen = ({ navigation }: Props) => {
   )
 
   const handleToggle = useCallback(
-    (id: string) => {
-      dispatch(toggleTaskStatus(id))
+    async (id: string) => {
+      const task = tasks.find((t) => t.id === id)
+      if (!task) return
+
+      try {
+        await updateTaskStatus(id, !task.completed)
+      } catch (error) {
+        console.error('Error al actualizar tarea:', error)
+      }
     },
-    [dispatch]
+    [tasks]
   )
 
   const renderItem = useCallback(
@@ -122,7 +146,7 @@ const TasksScreen = ({ navigation }: Props) => {
     <View style={[screenStyles.container, { backgroundColor: colors.canvas }]}>
       <View>
         <Text style={styles.brand}>TaskFlow</Text>
-        <Text style={styles.appSubtitle}>Lista, formulario y detalle</Text>
+
       </View>
 
       <View style={styles.container}>

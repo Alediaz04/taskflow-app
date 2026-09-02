@@ -1,5 +1,4 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
-import { NavigationContainer } from '@react-navigation/native'
 import { Ionicons } from '@expo/vector-icons'
 
 import ProfileStack from './ProfileStack'
@@ -9,10 +8,9 @@ import { useAppTheme } from '../theme'
 const Tab = createBottomTabNavigator()
 
 const TabNavigator = () => {
-  const { navTheme, colors } = useAppTheme()
+  const { colors } = useAppTheme()
 
   return (
-    <NavigationContainer theme={navTheme}>
       <Tab.Navigator
         screenOptions={{
           headerShown: false,
@@ -64,7 +62,7 @@ const TabNavigator = () => {
           }}
         />
       </Tab.Navigator>
-    </NavigationContainer>
+    
   )
 }
 

@@ -5,3 +5,7 @@ export type RootStackParamList = {
   }
   TaskForm: undefined
 }
+export type AuthStackParamList = {
+  Login: undefined
+  Register: undefined
+}

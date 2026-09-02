@@ -153,4 +153,67 @@ Sexta fase del desarrollo ,implementacion de Redux Toolkit para el manejo del es
     1. Le agregue un modal que salta cuando el usuario completa todas las tareas
     2. Tambien agregue la functionality de que el modal no vuelva a aparecer hasta que el usuario complete todas las tareas de nuevo
     3. Agregue Modo Oscuro (se puede cambiar entre modo claro y modo oscuro en la seccion de perfil) para mejorar la UX/UI de usuario aunque predeterminado vendra en modo claro
+
+
+
+
+
+## PRE-ENTREGA 7
+Séptima fase del desarrollo: TaskFlow pasó de ser una app local a una app conectada. Se integró Firebase Auth para la sesión de usuario y Firestore para persistir las tareas en la nube, reemplazando el Store de Redux como única fuente de datos por un espejo en tiempo real de la base de datos.
+
+# Nuevas dependencias
+    firebase, @react-native-async-storage/async-storage
+
+# Arquitectura de autenticación y datos
+    RootNavigator (escucha la sesión con onAuthStateChanged)
+    ├── Sin sesión  -> AuthStack (Native Stack)
+    │   ├── Login    (src/screens/auth/LoginScreen.tsx)
+    │   └── Register (src/screens/auth/RegisterScreen.tsx)
+    └── Con sesión  -> TabNavigator (Home / Profile), como en la Pre-entrega 6
+
+    src/config/firebase.ts          -> inicializa Firebase (app, auth con persistencia
+                                        en AsyncStorage, db de Firestore)
+    src/services/auth/authService.ts   -> createAccount, signIn, logout
+    src/services/tasks/tasksService.ts -> createTask, subscribeToTasks (listener en
+                                        tiempo real filtrado por userId), updateTaskStatus,
+                                        removeTask
+    src/features/auth/authSlice.ts     -> estado global: { user, isLoading }
+
+    Las pantallas de tareas ya no escriben en Redux directamente: llaman a
+    tasksService (que impacta en Firestore), y es el listener de Firestore
+    (onSnapshot) el que despacha setTasks para actualizar el store. Redux
+    pasó a ser un espejo en memoria de Firestore, no la fuente de verdad.
+
+# Que construimos en esta pre entrega?
+    1. Login y Registro contra Firebase Auth (email/contraseña), con manejo de error visible en la UI
+    2. Persistencia de sesión: onAuthStateChanged detecta al usuario logueado al abrir la app
+       (gracias a getReactNativePersistence + AsyncStorage), sin pedir login de nuevo
+    3. Rutas protegidas: RootNavigator decide AuthStack o TabNavigator según haya o no un usuario activo
+    4. Colección "tasks" en Firestore: cada documento incluye un userId con el uid del dueño
+    5. CRUD real contra Firestore: crear, togglear completado y eliminar impactan directo en la base
+    6. Lista reactiva con onSnapshot: los cambios en Firestore se reflejan en la UI sin recargar nada a mano
+    7. tasksSlice actualizado: arranca vacío (ya no con datos de ejemplo) y suma la acción setTasks
+       para poblarse desde el listener de Firestore
+
+# Que se logro?
+    1. Un usuario "A" no puede ver ni modificar las tareas de un usuario "B" (query filtrada por
+       where('userId', '==', uid))
+    2. Togglear o eliminar una tarea desde el Detalle se refleja al instante en la Lista, porque
+       ambas pantallas leen del mismo store, alimentado por el mismo listener
+    3. Cerrar y volver a abrir la app no vuelve a pedir login (persistencia de sesión real)
+    4. La app maneja errores de autenticación (contraseña incorrecta, email en uso) sin romperse,
+       mostrando el mensaje en la propia pantalla
+
+# Cómo se probaron los flujos de login y guardado de tareas
+    1. Registro: se creó una cuenta nueva desde RegisterScreen (email + contraseña) y se verificó
+       la redirección automática al Home (Tab de Tareas) sin pasos manuales adicionales
+    2. Verificación en Firebase: se confirmó en Firebase Console -> Authentication que el usuario
+       quedó dado de alta
+    3. Guardado de tareas: se creó una tarea desde el formulario y se verificó que apareciera de
+       inmediato en la lista, y también en Firebase Console -> Firestore Database -> colección "tasks",
+       con su campo userId correspondiente
+
+## MODIFICACIONES PROPIAS:
+    1. Agregue un boton de cerrar sesion en la parte de perfil, para poder cerrar la sesion y entrar con otra cuenta
+    2. Le mejore el disenio UX/UI de login y register para poder tener una experiencia de usuario superior
     

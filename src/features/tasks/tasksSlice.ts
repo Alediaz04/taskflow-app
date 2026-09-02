@@ -2,7 +2,6 @@ import { createSelector, createSlice, type PayloadAction } from '@reduxjs/toolki
 
 import type { Category, Task } from '../../types'
 import { createId } from '../../types'
-import { SEED_TASKS } from '../../data/seed'
 import type { RootState } from '../../store'
 
 export type FilterId = 'all' | 'today' | 'completed' | Category
@@ -15,7 +14,7 @@ type TasksState = {
 }
 
 const initialState: TasksState = {
-    items: SEED_TASKS,
+    items: [],
     filter: 'all'
 }
 
@@ -43,11 +42,14 @@ const tasksSlice = createSlice({
         },
         setFilter: (state, action: PayloadAction<FilterId>) => {
             state.filter = action.payload
+        },
+        setTasks: (state, action: PayloadAction<Task[]>) => {
+            state.items = action.payload
         }
     }
 })
 
-export const { addTask, toggleTaskStatus, deleteTask, setFilter } = tasksSlice.actions
+export const { addTask, toggleTaskStatus, deleteTask, setTasks, setFilter } = tasksSlice.actions
 export default tasksSlice.reducer
 // Selectores
 
