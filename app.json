@@ -17,6 +17,7 @@
         "backgroundColor": "#ffffff"
       },
       "permissions": [
+        "android.permission.RECORD_AUDIO",
         "android.permission.RECORD_AUDIO"
       ]
     },
@@ -37,6 +38,12 @@
         "projectId": "f60904e4-3844-49d5-9125-0f860c6e85a6"
       }
     },
-    "owner": "alediazdev"
+    "owner": "alediazdev",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/f60904e4-3844-49d5-9125-0f860c6e85a6"
+    }
   }
 }

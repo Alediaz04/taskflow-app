@@ -303,4 +303,6 @@ Consolidación final de la aplicación móvil TaskFlow.
     5. Reglas de seguridad: se probó (con la consola de Firebase) que un usuario sin sesión
        no puede leer la colección tasks ni users
 
-    
+#### Link Expo GO ####
+https://expo.dev/accounts/alediazdev/projects/taskflow-app/updates/b04139fc-e289-4f6e-9d5b-33671902914e
+
