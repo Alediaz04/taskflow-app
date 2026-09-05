@@ -228,4 +228,79 @@ Consolidación final de la aplicación móvil TaskFlow.
     4. Navegación e Interfaz Consistente: Bottom Tabs + Native Stack con React Navigation. Soporte completo de Modo Claro / Modo Oscuro (Dark Mode).
     5. Estabilidad y Calidad: 0 errores de compilación de TypeScript (npx tsc --noEmit), manejo seguro de permisos de hardware y experiencia fluida sin cierres inesperados.
 
+
+    ## ENTREGA FINAL
+Última fase del proyecto: se consolidó todo lo construido en las pre-entregas anteriores y se sumó la última funcionalidad nativa (foto de perfil con expo-image-picker), dejando TaskFlow listo para producción.
+
+# Nueva dependencia
+    expo-image-picker
+
+# Qué se sumó en esta entrega
+    1. src/services/profile/profileService.ts -> getUserProfile / updateUserPhoto contra un
+       documento users/{uid} en Firestore (separado de la colección tasks)
+    2. authSlice: se agregó photoURL a AuthUser y la acción setUserPhoto
+    3. RootNavigator: después de detectar la sesión (onAuthStateChanged), hidrata la foto de
+       perfil desde Firestore sin demorar la entrada a la app (setUser primero, foto después)
+    4. ProfileScreen: el círculo de iniciales ahora es tocable -- pide permiso de galería,
+       abre el selector nativo (con recorte cuadrado) y guarda la foto en Firestore + Redux
+
+# Cómo funciona el flujo de la foto de perfil
+    1. El usuario toca su avatar en la pestaña Perfil
+    2. Se pide permiso de acceso a la galería (ImagePicker.requestMediaLibraryPermissionsAsync);
+       si lo rechaza, se muestra una alerta y no pasa nada más
+    3. Se abre el selector nativo de imágenes con recorte 1:1
+    4. Si el usuario cancela, no se guarda nada (no hay crash ni pantalla en blanco)
+    5. Si elige una imagen, su URI se guarda en Firestore (users/{uid}.photoURL) y también
+       en Redux (setUserPhoto), así la UI se actualiza al instante sin esperar ningún listener
+
+# Reglas de seguridad de Firestore
+    Solo usuarios autenticados acceden a sus propios datos:
+
+    rules_version = '2';
+    service cloud.firestore {
+      match /databases/{database}/documents {
+        match /tasks/{taskId} {
+          allow read, delete: if request.auth.uid == resource.data.userId;
+          allow create: if request.auth.uid == request.resource.data.userId;
+          allow update: if request.auth.uid == resource.data.userId
+                        && request.auth.uid == request.resource.data.userId;
+        }
+        match /users/{userId} {
+          allow read, write: if request.auth.uid == userId;
+        }
+      }
+    }
+
+# Cómo correr el proyecto
+    npm install
+    npx expo start
+    Escaneá el código QR con Expo Go (Android/iOS), o presioná "a" para abrir el emulador de Android.
+
+    La configuración de Firebase vive en src/config/firebase.ts, con las credenciales del
+    proyecto propio (taskflow-app-c2272).
+
+# Despliegue
+    npx eas update --branch preview --message "Entrega final TaskFlow"
+    (requiere cuenta de Expo y "eas init" la primera vez; genera un link que abre la app
+    directo en Expo Go, sin necesidad de clonar el repo ni tener la compu prendida)
+
+# Evidencia visual
+    En la carpeta "PruebasTaskFlow" de este repositorio hay un video mostrando el
+    funcionamiento completo de la app: registro de usuario, login, lista de tareas
+    sincronizada con Firestore, creación y detalle de una tarea, y cambio de foto
+    de perfil desde la galería.
+
+# Cómo se probó el flujo completo
+    1. Login -> App privada: se inició sesión con una cuenta ya registrada y se verificó el
+       ingreso directo al Home con las tareas propias cargadas desde Firestore
+    2. Cambio de foto de perfil: se tocó el avatar, se seleccionó una imagen de la galería y
+       se confirmó que se actualizó al instante en la UI y quedó guardada en Firestore
+       (Firestore Database -> colección users -> documento del uid -> campo photoURL)
+    3. Cancelar selección de imagen: se abrió el selector y se canceló, confirmando que la
+       app no se cierra ni rompe nada
+    4. Logout -> Login: se cerró sesión desde Perfil y se confirmó que vuelve a la pantalla
+       de Login (rutas protegidas funcionando en ambos sentidos)
+    5. Reglas de seguridad: se probó (con la consola de Firebase) que un usuario sin sesión
+       no puede leer la colección tasks ni users
+
     

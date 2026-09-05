@@ -38,7 +38,7 @@ const RootNavigator = () => {
             dispatch(setUserPhoto(profile.photoURL))
           }
         } catch (error) {
-          console.error('Error al cargar el perfil del usuario:', error)
+          // Ignora silenciosamente si aún no existe el documento de perfil
         }
       } else {
         dispatch(setUser(null))

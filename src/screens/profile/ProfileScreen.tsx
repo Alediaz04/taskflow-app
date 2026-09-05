@@ -37,15 +37,14 @@ const ProfileScreen = () => {
   }
 
   const savePhoto = async (photoURL: string) => {
-    if (!user) return
-
     setIsSavingPhoto(true)
     try {
-      await updateUserPhoto(user.uid, photoURL)
       dispatch(setUserPhoto(photoURL))
+      if (user) {
+        await updateUserPhoto(user.uid, photoURL)
+      }
     } catch (error) {
-      console.error('Error al guardar la foto de perfil:', error)
-      Alert.alert('Error', 'No se pudo guardar la foto. Probá de nuevo.')
+      console.error('Error al guardar la foto en Firestore:', error)
     } finally {
       setIsSavingPhoto(false)
     }
