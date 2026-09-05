@@ -5,12 +5,11 @@ export type AuthUser = {
   uid: string
   email: string | null
   displayName: string | null
+  photoURL?: string | null
 }
 
 type AuthState = {
   user: AuthUser | null
-  // arranca en true: todavía no sabemos si hay sesión o no hasta que
-  // onAuthStateChanged (en RootNavigator) responda por primera vez
   isLoading: boolean
 }
 
@@ -26,12 +25,20 @@ const authSlice = createSlice({
     setUser: (state, action: PayloadAction<AuthUser | null>) => {
       state.user = action.payload
       state.isLoading = false
+    },
+    setUserPhoto: (state, action: PayloadAction<string | null>) => {
+      if (state.user) {
+        state.user.photoURL = action.payload
+      }
     }
   }
 })
 
-export const { setUser } = authSlice.actions
+export const { setUser, setUserPhoto } = authSlice.actions
 export default authSlice.reducer
 
 export const selectCurrentUser = (state: RootState) => state.auth.user
 export const selectAuthLoading = (state: RootState) => state.auth.isLoading
+export const selectUserPhoto = (state: RootState) => state.auth.user?.photoURL ?? null
+
+

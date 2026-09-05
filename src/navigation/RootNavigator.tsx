@@ -5,11 +5,13 @@ import { NavigationContainer } from '@react-navigation/native'
 
 import { auth } from '../config/firebase'
 import { useAppDispatch, useAppSelector } from '../store/hooks'
-import { selectAuthLoading, selectCurrentUser, setUser } from '../features/auth/authSlice'
+import { selectAuthLoading, selectCurrentUser, setUser, setUserPhoto } from '../features/auth/authSlice'
 import { useAppTheme } from '../theme'
 
 import AuthStack from './AuthStack'
 import TabNavigator from './TabNavigator'
+
+import { getUserProfile } from '../services/profile/profileService'
 
 const RootNavigator = () => {
   const dispatch = useAppDispatch()
@@ -19,15 +21,25 @@ const RootNavigator = () => {
   const isLoading = useAppSelector(selectAuthLoading)
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (firebaseUser) {
         dispatch(
           setUser({
             uid: firebaseUser.uid,
             email: firebaseUser.email,
-            displayName: firebaseUser.displayName
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL ?? null
           })
         )
+
+        try {
+          const profile = await getUserProfile(firebaseUser.uid)
+          if (profile?.photoURL) {
+            dispatch(setUserPhoto(profile.photoURL))
+          }
+        } catch (error) {
+          console.error('Error al cargar el perfil del usuario:', error)
+        }
       } else {
         dispatch(setUser(null))
       }
@@ -51,4 +63,4 @@ const RootNavigator = () => {
   )
 }
 
-export default RootNavigator
+export default RootNavigator

@@ -1,7 +1,10 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
+  Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -11,47 +14,100 @@ import {
 } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { CATEGORIES, Category, DueDate, DUE_DATES } from '../../types'
+import { CATEGORIES, Category, CustomCategory, DueDate, DUE_DATES, getCategoryMeta } from '../../types'
 import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { RootStackParamList } from '../../navigation/types'
 import { useAppSelector } from '../../store/hooks'
 import { selectCurrentUser } from '../../features/auth/authSlice'
 import { createTask } from '../../services/tasks/tasksService'
+import { addCustomCategory, subscribeToCustomCategories } from '../../services/categories/categoriesService'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskForm'>
 
-const CATEGORY_KEYS = Object.keys(CATEGORIES) as Category[]
+const DEFAULT_CATEGORY_KEYS = Object.keys(CATEGORIES)
 const DATE_KEYS = Object.keys(DUE_DATES) as DueDate[]
+const EMOJI_OPTIONS = ['🏋️', '💰', '🎨', '✈️', '🛒', '💡', '🍔', '🚗', '📚', '🌱', '🏷️']
 
 export default function TaskFormScreen({ navigation }: Props) {
   const { colors } = useAppTheme()
   const styles = getStyles(colors)
 
   const user = useAppSelector(selectCurrentUser)
-const [title, setTitle] = useState('')
-const [description, setDescription] = useState('')
-const [category, setCategory] = useState<Category>('personal')
-const [date, setDate] = useState<DueDate>('today')
-const [isSubmitting, setIsSubmitting] = useState(false)
+  const [title, setTitle] = useState('')
+  const [description, setDescription] = useState('')
+  const [category, setCategory] = useState<Category>('personal')
+  const [date, setDate] = useState<DueDate>('today')
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !isSubmitting
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([])
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false)
+  const [newCatName, setNewCatName] = useState('')
+  const [newCatEmoji, setNewCatEmoji] = useState('🏋️')
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false)
 
-const handleSubmit = async () => {
-  if (!canSubmit || !user) return
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = subscribeToCustomCategories(user.uid, (cats) => {
+      setCustomCategories(cats)
+    })
+    return unsubscribe
+  }, [user])
 
-  setIsSubmitting(true)
-  try {
-    await createTask(
-      { title: title.trim(), description: description.trim(), category, date, completed: false },
-      user.uid
-    )
-    navigation.navigate('TaskList')
-  } catch (error) {
-    console.error('Error al crear tarea:', error)
-  } finally {
-    setIsSubmitting(false)
+  const canSubmit = title.trim().length > 0 && description.trim().length > 0 && !isSubmitting
+
+  const handleSubmit = async () => {
+    if (!canSubmit || !user) return
+
+    setIsSubmitting(true)
+    try {
+      await createTask(
+        { title: title.trim(), description: description.trim(), category, date, completed: false },
+        user.uid
+      )
+      navigation.navigate('TaskList')
+    } catch (error) {
+      console.error('Error al crear tarea:', error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
-}
+
+  const handleCreateCategory = async () => {
+    if (!newCatName.trim() || !user) return
+
+    setIsCreatingCategory(true)
+    try {
+      const created = await addCustomCategory(user.uid, {
+        label: newCatName.trim(),
+        emoji: newCatEmoji
+      })
+      setCategory(created.id)
+      setNewCatName('')
+      setIsAddModalOpen(false)
+    } catch (error) {
+      console.error('Error al crear categoría:', error)
+      Alert.alert('Error', 'No se pudo guardar la nueva categoría.')
+    } finally {
+      setIsCreatingCategory(false)
+    }
+  }
+
+  // Combinar categorías por defecto con las personalizadas del usuario
+  const allCategoryList = [
+    ...DEFAULT_CATEGORY_KEYS.map((key) => ({
+      key,
+      meta: CATEGORIES[key]
+    })),
+    ...customCategories.map((c) => ({
+      key: c.id,
+      meta: {
+        label: c.label,
+        color: c.color,
+        soft: c.soft,
+        emoji: c.emoji
+      }
+    }))
+  ]
 
   return (
     <KeyboardAvoidingView
@@ -96,8 +152,7 @@ const handleSubmit = async () => {
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>Categoría</Text>
           <View style={styles.chipRow}>
-            {CATEGORY_KEYS.map((key) => {
-              const cat = CATEGORIES[key]
+            {allCategoryList.map(({ key, meta }) => {
               const active = category === key
 
               return (
@@ -105,23 +160,27 @@ const handleSubmit = async () => {
                   key={key}
                   style={[
                     styles.chip,
-                    { borderColor: cat.color },
-                    active && { backgroundColor: cat.color }
+                    { borderColor: meta.color },
+                    active && { backgroundColor: meta.color }
                   ]}
                   onPress={() => setCategory(key)}
                   activeOpacity={0.8}
                 >
-                  <Text
-                    style={[
-                      styles.chipText,
-                      { color: active ? '#FFFFFF' : cat.color }
-                    ]}
-                  >
-                    {cat.emoji} {cat.label}
+                  <Text style={[styles.chipText, { color: active ? '#FFFFFF' : meta.color }]}>
+                    {meta.emoji} {meta.label}
                   </Text>
                 </TouchableOpacity>
               )
             })}
+
+            {/* Botón de Agregar Categoría (+) */}
+            <TouchableOpacity
+              style={[styles.chip, styles.chipAdd]}
+              onPress={() => setIsAddModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <Text style={[styles.chipText, { color: colors.primary }]}>＋ Nueva</Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -163,6 +222,71 @@ const handleSubmit = async () => {
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>
       </ScrollView>
+
+      {/* Modal para Crear Nueva Categoría */}
+      <Modal
+        visible={isAddModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setIsAddModalOpen(false)}
+      >
+        <Pressable style={styles.modalOverlay} onPress={() => setIsAddModalOpen(false)}>
+          <Pressable style={styles.modalContent} onPress={(e) => e.stopPropagation()}>
+            <Text style={styles.modalTitle}>Nueva Categoría Personalizada</Text>
+            <Text style={styles.modalSubtext}>
+              Escribí el nombre y elegí un ícono para clasificar tus tareas.
+            </Text>
+
+            <TextInput
+              style={styles.input}
+              placeholder="Ej. Gimnasio, Finanzas, Mascotas"
+              placeholderTextColor={colors.muted}
+              value={newCatName}
+              onChangeText={setNewCatName}
+              autoFocus
+            />
+
+            <Text style={styles.emojiLabel}>Elegí un ícono:</Text>
+            <View style={styles.emojiGrid}>
+              {EMOJI_OPTIONS.map((emoji) => (
+                <TouchableOpacity
+                  key={emoji}
+                  style={[
+                    styles.emojiItem,
+                    newCatEmoji === emoji && { backgroundColor: colors.primarySoft, borderColor: colors.primary }
+                  ]}
+                  onPress={() => setNewCatEmoji(emoji)}
+                >
+                  <Text style={{ fontSize: 20 }}>{emoji}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.modalActions}>
+              <TouchableOpacity
+                style={[styles.modalBtn, styles.modalBtnCancel]}
+                onPress={() => setIsAddModalOpen(false)}
+              >
+                <Text style={{ color: colors.muted, fontWeight: '700' }}>Cancelar</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[
+                  styles.modalBtn,
+                  styles.modalBtnSave,
+                  (!newCatName.trim() || isCreatingCategory) && { opacity: 0.5 }
+                ]}
+                onPress={handleCreateCategory}
+                disabled={!newCatName.trim() || isCreatingCategory}
+              >
+                <Text style={{ color: '#FFFFFF', fontWeight: '800' }}>
+                  {isCreatingCategory ? 'Guardando...' : 'Crear'}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </KeyboardAvoidingView>
   )
 }
@@ -219,6 +343,11 @@ const getStyles = (colors: AppColors) =>
       paddingHorizontal: spacing.md,
       paddingVertical: spacing.xs + 2
     },
+    chipAdd: {
+      borderColor: colors.primary,
+      borderStyle: 'dashed',
+      backgroundColor: colors.primarySoft
+    },
     chipNeutral: {
       borderColor: colors.border,
       backgroundColor: colors.surface
@@ -255,5 +384,70 @@ const getStyles = (colors: AppColors) =>
       color: colors.muted,
       fontSize: 14,
       fontWeight: '600'
+    },
+    /* Modal de Nueva Categoría */
+    modalOverlay: {
+      flex: 1,
+      backgroundColor: 'rgba(0,0,0,0.5)',
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: spacing.lg
+    },
+    modalContent: {
+      width: '100%',
+      maxWidth: 340,
+      backgroundColor: colors.surface,
+      borderRadius: radius.lg,
+      padding: spacing.lg,
+      gap: spacing.md,
+      boxShadow: shadow.raised
+    },
+    modalTitle: {
+      fontSize: 18,
+      fontWeight: '800',
+      color: colors.ink
+    },
+    modalSubtext: {
+      fontSize: 13,
+      color: colors.muted,
+      marginTop: -spacing.xs
+    },
+    emojiLabel: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: colors.muted,
+      textTransform: 'uppercase'
+    },
+    emojiGrid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: spacing.xs + 2
+    },
+    emojiItem: {
+      width: 40,
+      height: 40,
+      borderRadius: radius.md,
+      borderWidth: 1.5,
+      borderColor: colors.border,
+      alignItems: 'center',
+      justifyContent: 'center'
+    },
+    modalActions: {
+      flexDirection: 'row',
+      justifyContent: 'flex-end',
+      gap: spacing.sm,
+      marginTop: spacing.xs
+    },
+    modalBtn: {
+      paddingHorizontal: spacing.md,
+      paddingVertical: spacing.sm + 2,
+      borderRadius: radius.md
+    },
+    modalBtnCancel: {
+      backgroundColor: colors.canvas
+    },
+    modalBtnSave: {
+      backgroundColor: colors.primary
     }
   })
+

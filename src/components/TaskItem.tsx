@@ -1,6 +1,6 @@
 import React, { memo, useEffect } from 'react'
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native'
-import { CATEGORIES, DUE_DATES, Task } from '../types'
+import { getCategoryMeta, CustomCategory, DUE_DATES, Task } from '../types'
 import { radius, shadow, spacing, useAppTheme } from '../theme'
 
 type Props = {
@@ -8,13 +8,14 @@ type Props = {
   onToggle: (id: string) => void
   onPress: (task: Task) => void
   onMountChange?: () => () => void
+  customCategories?: CustomCategory[]
 }
 
-const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange }: Props) {
+const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange, customCategories }: Props) {
   useEffect(() => onMountChange?.(), [onMountChange])
   const { colors } = useAppTheme()
 
-  const cat = CATEGORIES[task.category]
+  const cat = getCategoryMeta(task.category, customCategories)
 
   return (
     <TouchableOpacity
@@ -60,6 +61,7 @@ const TaskItem = memo(function TaskItem({ task, onToggle, onPress, onMountChange
     </TouchableOpacity>
   )
 })
+
 
 export default TaskItem
 

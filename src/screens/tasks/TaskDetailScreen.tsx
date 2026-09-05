@@ -1,13 +1,15 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native'
 import { NativeStackScreenProps } from '@react-navigation/native-stack'
 
-import { CATEGORIES, DUE_DATES } from '../../types'
+import { CustomCategory, DUE_DATES, getCategoryMeta } from '../../types'
 import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
 import { RootStackParamList } from '../../navigation/types'
 import { useAppSelector } from '../../store/hooks'
+import { selectCurrentUser } from '../../features/auth/authSlice'
 import { selectTaskById } from '../../features/tasks/tasksSlice'
 import { removeTask, updateTaskStatus } from '../../services/tasks/tasksService'
+import { subscribeToCustomCategories } from '../../services/categories/categoriesService'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskDetail'>
 
@@ -15,8 +17,18 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
   const { colors } = useAppTheme()
   const styles = getStyles(colors)
 
+  const user = useAppSelector(selectCurrentUser)
   const { taskId } = route.params
   const task = useAppSelector(selectTaskById(taskId))
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([])
+
+  useEffect(() => {
+    if (!user) return
+    const unsubscribe = subscribeToCustomCategories(user.uid, (cats) => {
+      setCustomCategories(cats)
+    })
+    return unsubscribe
+  }, [user])
 
   if (!task) {
     return (
@@ -29,7 +41,8 @@ export default function TaskDetailScreen({ navigation, route }: Props) {
     )
   }
 
-  const cat = CATEGORIES[task.category]
+  const cat = getCategoryMeta(task.category, customCategories)
+
 
   const handleToggle = async () => {
     try {

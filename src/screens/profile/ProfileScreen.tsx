@@ -1,15 +1,55 @@
 import React, { useState } from 'react'
-import { Alert, ActivityIndicator, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
+import { Alert, ActivityIndicator, Image, ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native'
 import { Ionicons } from '@expo/vector-icons'
+import * as ImagePicker from 'expo-image-picker'
 import { radius, shadow, spacing, screenStyles, useAppTheme } from '../../theme'
-import { useAppSelector } from '../../store/hooks'
-import { selectCurrentUser } from '../../features/auth/authSlice'
+import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { selectCurrentUser, setUserPhoto } from '../../features/auth/authSlice'
 import { logout } from '../../services/auth/authService'
+import { updateUserPhoto } from '../../services/profile/profileService'
 
 const ProfileScreen = () => {
   const { colors, isDark, toggleTheme } = useAppTheme()
   const user = useAppSelector(selectCurrentUser)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  const dispatch = useAppDispatch()
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false)
+
+  const pickImage = async () => {
+    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync()
+
+    if (status !== 'granted') {
+      Alert.alert('Permisos requeridos', 'Necesitamos acceso a tu galería para cambiar la foto de perfil.')
+      return
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.7
+    })
+
+    if (result.canceled) return
+
+    await savePhoto(result.assets[0].uri)
+  }
+
+  const savePhoto = async (photoURL: string) => {
+    if (!user) return
+
+    setIsSavingPhoto(true)
+    try {
+      await updateUserPhoto(user.uid, photoURL)
+      dispatch(setUserPhoto(photoURL))
+    } catch (error) {
+      console.error('Error al guardar la foto de perfil:', error)
+      Alert.alert('Error', 'No se pudo guardar la foto. Probá de nuevo.')
+    } finally {
+      setIsSavingPhoto(false)
+    }
+  }
 
   const handleLogout = () => {
     Alert.alert(
@@ -57,14 +97,33 @@ const ProfileScreen = () => {
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
         {/* Tarjeta de Perfil / User Hero Card */}
         <View style={[styles.userCard, { backgroundColor: colors.surface }]}>
-          <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
-            <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800' }}>{getInitials()}</Text>
+          <TouchableOpacity style={styles.avatarWrapper} onPress={pickImage} disabled={isSavingPhoto} activeOpacity={0.85}>
+            {user?.photoURL ? (
+              <Image source={{ uri: user.photoURL }} style={styles.avatarImage} />
+            ) : (
+              <View style={[styles.avatarContainer, { backgroundColor: colors.primary }]}>
+                <Text style={{ color: '#FFFFFF', fontSize: 22, fontWeight: '800' }}>{getInitials()}</Text>
+              </View>
+            )}
+
+            {isSavingPhoto ? (
+              <View style={styles.avatarOverlay}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+              </View>
+            ) : (
+              <View style={[styles.avatarBadge, { backgroundColor: colors.primary, borderColor: colors.surface }]}>
+                <Ionicons name="camera" size={12} color="#FFFFFF" />
+              </View>
+            )}
+
             <View style={[styles.activeDot, { backgroundColor: colors.success, borderColor: colors.surface }]} />
-          </View>
+          </TouchableOpacity>
 
           <View style={styles.userInfo}>
             <Text style={[styles.userName, { color: colors.ink }]}>{displayName}</Text>
             <Text style={[styles.userRole, { color: colors.muted }]}>{userEmail}</Text>
+            <Text style={[styles.avatarHint, { color: colors.muted }]}>Tocá la foto para cambiarla</Text>
+
             <View style={styles.badgeRow}>
               <View style={[styles.proBadge, { backgroundColor: colors.primarySoft }]}>
                 <Text style={[styles.proBadgeText, { color: colors.primary }]}>⚡ Miembro de TaskFlow</Text>
@@ -154,22 +213,59 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     boxShadow: shadow.card
   },
+  avatarWrapper: {
+    width: 64,
+    height: 64,
+    position: 'relative'
+  },
   avatarContainer: {
     width: 64,
     height: 64,
     borderRadius: 32,
     alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative'
+    justifyContent: 'center'
   },
-  activeDot: {
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+  avatarImage: {
+    width: 64,
+    height: 64,
+    borderRadius: 32
+  },
+  avatarOverlay: {
     position: 'absolute',
-    bottom: 2,
-    right: 2,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  // activeDot: cambiá bottom:2/right:2 por esto, para que no pise el badge de cámara:
+  activeDot: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
+    position: 'absolute',
+    top: -1,
+    right: -1,
     borderWidth: 2
+  },
+  // y agregá junto a userRole:
+  avatarHint: {
+    fontSize: 11,
+    fontWeight: '600'
   },
   userInfo: {
     flex: 1,

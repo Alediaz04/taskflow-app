@@ -7,9 +7,8 @@ import EmptyState from '../../components/EmptyState'
 import MountBadge, { useMountCounter } from '../../components/MountBadge'
 import TaskItem from '../../components/TaskItem'
 import { radius, shadow, spacing, screenStyles, useAppTheme, AppColors } from '../../theme'
-import { Task } from '../../types'
+import { CustomCategory, Task } from '../../types'
 import { RootStackParamList } from '../../navigation/types'
-
 
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import {
@@ -23,6 +22,7 @@ import {
 } from '../../features/tasks/tasksSlice'
 import { selectCurrentUser } from '../../features/auth/authSlice'
 import { subscribeToTasks, updateTaskStatus } from '../../services/tasks/tasksService'
+import { subscribeToCustomCategories } from '../../services/categories/categoriesService'
 
 type Props = NativeStackScreenProps<RootStackParamList, 'TaskList'>
 
@@ -32,7 +32,7 @@ type FilterOption = {
   emoji: string
 }
 
-const FILTERS: FilterOption[] = [
+const DEFAULT_FILTERS: FilterOption[] = [
   { id: 'all', label: 'Todas', emoji: '📋' },
   { id: 'today', label: 'Hoy', emoji: '📅' },
   { id: 'completed', label: 'Completadas', emoji: '✅' },
@@ -53,6 +53,7 @@ const TasksScreen = ({ navigation }: Props) => {
   const tasks = useAppSelector(selectAllTasks)
   const filteredTasks = useAppSelector(selectFilteredTasks)
   const activeFilter = useAppSelector(selectFilter)
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([])
 
   const { mounted, onMountChange } = useMountCounter()
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
@@ -64,11 +65,18 @@ const TasksScreen = ({ navigation }: Props) => {
   useEffect(() => {
     if (!user) return
 
-    const unsubscribe = subscribeToTasks(user.uid, (tasks) => {
+    const unsubscribeTasks = subscribeToTasks(user.uid, (tasks) => {
       dispatch(setTasks(tasks))
     })
 
-    return unsubscribe
+    const unsubscribeCategories = subscribeToCustomCategories(user.uid, (cats) => {
+      setCustomCategories(cats)
+    })
+
+    return () => {
+      unsubscribeTasks()
+      unsubscribeCategories()
+    }
   }, [user, dispatch])
 
   const pending = tasks.filter((t) => !t.completed).length
@@ -96,7 +104,16 @@ const TasksScreen = ({ navigation }: Props) => {
     setShowCompletionModal(false)
   }, [])
 
-  const activeOption = FILTERS.find((f) => f.id === activeFilter) || FILTERS[0]
+  const filtersList: FilterOption[] = [
+    ...DEFAULT_FILTERS,
+    ...customCategories.map((c) => ({
+      id: c.id as FilterId,
+      label: c.label,
+      emoji: c.emoji
+    }))
+  ]
+
+  const activeOption = filtersList.find((f) => f.id === activeFilter) || filtersList[0]
 
   /** Cantidad de tareas por filtro */
   const getFilterCount = (filterId: FilterId) => {
@@ -136,10 +153,11 @@ const TasksScreen = ({ navigation }: Props) => {
           onToggle={handleToggle}
           onPress={openDetail}
           onMountChange={onMountChange}
+          customCategories={customCategories}
         />
       )
     },
-    [handleToggle, openDetail, onMountChange]
+    [handleToggle, openDetail, onMountChange, customCategories]
   )
 
   return (
@@ -222,7 +240,7 @@ const TasksScreen = ({ navigation }: Props) => {
           <Pressable style={styles.modalOverlay} onPress={() => setIsDropdownOpen(false)}>
             <View style={styles.modalMenu}>
               <Text style={styles.modalTitle}>Filtrar tareas por</Text>
-              {FILTERS.map((f) => {
+              {filtersList.map((f) => {
                 const isActive = activeFilter === f.id
                 const count = getFilterCount(f.id)
                 return (
@@ -250,6 +268,7 @@ const TasksScreen = ({ navigation }: Props) => {
           </Pressable>
         </Modal>
       </View>
+
 
       <TouchableOpacity
         style={styles.fabRow}
