@@ -306,3 +306,25 @@ Consolidación final de la aplicación móvil TaskFlow.
 #### Link Expo GO ####
 https://expo.dev/accounts/alediazdev/projects/taskflow-app/updates/b04139fc-e289-4f6e-9d5b-33671902914e
 
+
+## DESCARGAR PARA ANDROID
+https://expo.dev/artifacts/eas/BkYI0Oo4w-1x49kIVskcLwknEPfdjR7UM041GJdvnSQ.aab
+
+
+### REGLA DE SEGURIDAD DE FIRESTORE
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Tareas del usuario
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null;
+    }
+    
+    // Perfil del usuario
+    match /users/{userId} {
+      allow read, write: if request.auth != null;
+    }
+    
+  }
+}
